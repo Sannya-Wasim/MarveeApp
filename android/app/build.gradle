@@ -120,5 +120,5 @@ dependencies {
 }
 
 project.ext.vectoricons = [
-    iconFontNames: [ 'Feather.ttf', 'FontAwesome.ttf', 'FontAwesome5_Solid.ttf' 'MaterialIcons.ttf' ] // Add fonts you use
+    iconFontNames: [ 'Feather.ttf', 'FontAwesome.ttf', 'FontAwesome5_Solid.ttf', 'MaterialIcons.ttf' ] // Add fonts you use
 ]

@@ -12,10 +12,8 @@ import {
 import { ScaledSheet, scale } from 'react-native-size-matters';
 import { MainScreenHeader } from '../../components/header';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { DrawerScreenProps } from '@react-navigation/drawer';
 
 import { Input, useInputState } from '../../components/inputs/textInput';
-import FastImage from 'react-native-fast-image';
 import {
   BLACK,
   BLUE_COLOR,
@@ -229,7 +227,32 @@ const HomeScreen = ({ navigation }: Props) => {
             </Text>
           </View>
         </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Text
+            style={{
+              fontSize: scale(20),
+              color: BLACK,
+              fontWeight: 'bold',
+            }}
+          >
+            My Appointments
+          </Text>
+          <Pressable style={{
+            backgroundColor : RED_COLOR,
+            paddingHorizontal : 20,
+            paddingVertical : 5,
+            borderRadius : 5
+          }} onPress={() => navigation.navigate('AddNewVisit')}>
+            <Icon name="plus" color={WHITE} size={20} />
+          </Pressable>
+        </View>
+        {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <Pressable
             onPress={() => navigation.navigate('AddNewVisit')}
             style={[
@@ -257,7 +280,7 @@ const HomeScreen = ({ navigation }: Props) => {
           >
             <Text style={GlobalStyle.outlinedButtonText}>Visits</Text>
           </Pressable>
-        </View>
+        </View> */}
 
         {visits.map((v, i) => (
           <View
@@ -273,20 +296,32 @@ const HomeScreen = ({ navigation }: Props) => {
               style={{
                 flexDirection: 'row',
                 justifyContent: 'space-between',
+                alignItems: 'center',
                 paddingBottom: scale(10),
                 borderBottomWidth: 1,
                 borderBottomColor: BLACK,
               }}
             >
-              <Text
+              {/* <View
                 style={{
-                  fontSize: scale(20),
-                  color: BLACK,
-                  fontWeight: 'bold',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
                 }}
               >
-                Ongoing Visit
-              </Text>
+                <Pressable onPress={() => navigation.navigate('AddNewVisit')}>
+                  <Icon name="plus" color={BLACK} size={15} />
+                </Pressable>
+                <Text
+                  style={{
+                    // fontSize: scale(20),
+                    color: BLACK,
+                    fontWeight: 'bold',
+                  }}
+                >
+                  My Appointments
+                </Text>
+              </View> */}
               <Text style={{ fontSize: scale(15), color: BLACK }}>
                 Date: {new Date(v.date).toLocaleDateString()}
               </Text>
@@ -365,7 +400,8 @@ const HomeScreen = ({ navigation }: Props) => {
               }}
             >
               <Pressable
-                onPress={() => navigation.navigate('VisitScreen', { id: v.id })}
+                // onPress={() => navigation.navigate('VisitScreen', { id: v.id })}
+                onPress={() => navigation.navigate('CallScreen', { id: v.id })}
                 style={[
                   GlobalStyle.filedButton,
                   {
@@ -376,7 +412,7 @@ const HomeScreen = ({ navigation }: Props) => {
                   },
                 ]}
               >
-                <Icon name="plus" color={WHITE} size={20} />
+                {/* <Icon name="plus" color={WHITE} size={20} /> */}
                 <Text style={GlobalStyle.filedButtonText}>Consult Patient</Text>
               </Pressable>
               <Pressable

@@ -6,7 +6,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { Input, useInputState } from '../../components/inputs/textInput';
 import FastImage from 'react-native-fast-image';
-import { BLACK, BLUE_COLOR, RED_COLOR, WHITE, WHITE_10 } from '../../util/color';
+import { BLACK, BLUE_COLOR, GRAY, RED_COLOR, WHITE, WHITE_10 } from '../../util/color';
 import Icon from 'react-native-vector-icons/Feather'
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import GlobalStyle from '../../util/styles';
@@ -22,15 +22,17 @@ const AddNewVisit = ({ navigation }: Props) => {
     const marveeName = useInputState('')
     const district = useInputState('')
     const area = useInputState('')
+    const number = useInputState('')
 
 
     return (
         <SafeAreaView style={styles.mainContainer}>
             <AllHeader title='Visit Details' back={() => navigation.goBack()} navigate={() => navigation.navigate('HelpScreen')} />
             <View style={styles.container}>
-                <Input inputState={marveeName} maxLength={11} label={null} placeholder='Enter Marvee’s Name' />
-                <Input inputState={district} maxLength={11} label={null} placeholder='Enter District' />
-                <Input inputState={area} maxLength={11} label={null} placeholder='Enter Area' />
+                <Input inputState={marveeName} maxLength={11} label={null} placeholder='Enter Marvee’s Name' placeholderTextColor={GRAY}/>
+                <Input inputState={number} maxLength={11} label={null} placeholder='Enter Mobile Number' placeholderTextColor={GRAY}/>
+                <Input inputState={district} maxLength={11} label={null} placeholder='Enter District' placeholderTextColor={GRAY}/>
+                <Input inputState={area} maxLength={11} label={null} placeholder='Enter Area' placeholderTextColor={GRAY}/>
                 <Pressable onPress={() => {
                     if (marveeName.value === '' || district.value === '' || area.value === '') {
                         Alert.alert('Please fill all the fields')
@@ -44,7 +46,8 @@ const AddNewVisit = ({ navigation }: Props) => {
                         date: new Date(),
                         patients:[]
                     }))
-                    navigation.navigate('VisitScreen',{id:visits.length + 1})
+                    // navigation.navigate('VisitScreen',{id:visits.length + 1})
+                    navigation.navigate('MainHomeScreen')
                 }} style={[GlobalStyle.filedButton]}>
                     <Text style={GlobalStyle.filedButtonText}>Submit</Text>
                 </Pressable>
