@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   SafeAreaView,
   Button,
+  ActivityIndicator,
 } from 'react-native';
 import { ScaledSheet, scale } from 'react-native-size-matters';
 import { MainScreenHeader } from '../../components/header';
@@ -27,11 +28,46 @@ import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import GlobalStyle from '../../util/styles';
 import { useAppSelector } from '../../store/hook';
 import { HomeStackScreenType } from '../../navigations/Stacks/homeStack';
+import { config } from '../../config';
+import axios from 'axios';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+import Appointments from './components/Appointments';
+import { useApi } from '../../methods/apiClient';
+import { endpoints } from '../../methods/endpoints';
+
 type StackProps = NativeStackScreenProps<HomeStackScreenType, 'MainHomeScreen'>;
 type Props = StackProps;
 const HomeScreen = ({ navigation }: Props) => {
   const toggleDrawer = () => {};
   const { visits } = useAppSelector(state => state.visit);
+  const [appoints, setAppoints] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const {POST} = useApi()
+
+  const fetchAppointments = async () => {
+    setLoading(true);
+    try {
+      const formdata = new FormData();
+      formdata.append('lhvId', '1547');
+      const res = await POST(endpoints?.getAppointments, formdata);
+      if (res.status) {
+        console.log('Successfully fetched appointments', res?.data);
+        setAppoints(res?.data?.data);
+      } else {
+        console.log('Failed to fetch appointments', res?.message);
+      }
+    } catch (error) {
+      console.log('Error fetching appointments', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
   return (
     <SafeAreaView style={styles.mainContainer}>
       <MainScreenHeader toggleDrawer={toggleDrawer} walletNav={() => {}} />
@@ -50,7 +86,7 @@ const HomeScreen = ({ navigation }: Props) => {
             <Text
               style={{ color: WHITE, fontSize: scale(16), fontWeight: 'bold' }}
             >
-              Saba Kanwal
+              {user?.name}
             </Text>
             <Text style={{ color: WHITE, fontSize: scale(14) }}>LHV</Text>
           </View>
@@ -243,12 +279,15 @@ const HomeScreen = ({ navigation }: Props) => {
           >
             My Appointments
           </Text>
-          <Pressable style={{
-            backgroundColor : RED_COLOR,
-            paddingHorizontal : 20,
-            paddingVertical : 5,
-            borderRadius : 5
-          }} onPress={() => navigation.navigate('AddNewVisit')}>
+          <Pressable
+            style={{
+              backgroundColor: RED_COLOR,
+              paddingHorizontal: 20,
+              paddingVertical: 5,
+              borderRadius: 5,
+            }}
+            onPress={() => navigation.navigate('AddNewVisit')}
+          >
             <Icon name="plus" color={WHITE} size={20} />
           </Pressable>
         </View>
@@ -282,155 +321,7 @@ const HomeScreen = ({ navigation }: Props) => {
           </Pressable>
         </View> */}
 
-        {visits.map((v, i) => (
-          <View
-            key={i}
-            style={{
-              backgroundColor: WHITE_10,
-              borderRadius: scale(10),
-              padding: 10,
-              marginVertical: 20,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingBottom: scale(10),
-                borderBottomWidth: 1,
-                borderBottomColor: BLACK,
-              }}
-            >
-              {/* <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                }}
-              >
-                <Pressable onPress={() => navigation.navigate('AddNewVisit')}>
-                  <Icon name="plus" color={BLACK} size={15} />
-                </Pressable>
-                <Text
-                  style={{
-                    // fontSize: scale(20),
-                    color: BLACK,
-                    fontWeight: 'bold',
-                  }}
-                >
-                  My Appointments
-                </Text>
-              </View> */}
-              <Text style={{ fontSize: scale(15), color: BLACK }}>
-                Date: {new Date(v.date).toLocaleDateString()}
-              </Text>
-            </View>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                paddingBottom: scale(10),
-                flexWrap: 'wrap',
-                padding: scale(8),
-              }}
-            >
-              <View style={{ flexBasis: '100%', flexDirection: 'row' }}>
-                <Text
-                  style={{
-                    fontSize: scale(15),
-                    color: BLACK,
-                    fontWeight: 'bold',
-                    marginRight: scale(5),
-                  }}
-                >
-                  Marvee:
-                </Text>
-                <Text style={{ fontSize: scale(15), color: BLACK }}>
-                  {v.marveeName}
-                </Text>
-              </View>
-              <View style={{ flexBasis: '100%', flexDirection: 'row' }}>
-                <Text
-                  style={{
-                    fontSize: scale(15),
-                    color: BLACK,
-                    fontWeight: 'bold',
-                    marginRight: scale(5),
-                  }}
-                >
-                  Area:
-                </Text>
-                <Text style={{ fontSize: scale(15), color: BLACK }}>
-                  {v.marveeName}
-                </Text>
-              </View>
-              {/* <View style={{ flexBasis: "100%", flexDirection: "row", }}>
-                            <Text style={{ fontSize: scale(15), color: BLACK, fontWeight: "bold", marginRight: scale(5) }}>Purpose of Visit:</Text>
-                            <Text style={{ fontSize: scale(15), color: BLACK }}>Purpose goes here!</Text>
-                        </View> */}
-              <View style={{ flexBasis: '100%', flexDirection: 'row' }}>
-                <Text
-                  style={{
-                    fontSize: scale(15),
-                    color: BLACK,
-                    fontWeight: 'bold',
-                    marginRight: scale(5),
-                  }}
-                >
-                  Patients Checked:
-                </Text>
-                <Text
-                  style={{
-                    fontSize: scale(15),
-                    color: BLACK,
-                    fontWeight: 'bold',
-                  }}
-                >
-                  {v.patients?.length || 0}
-                </Text>
-              </View>
-            </View>
-            <View
-              style={{
-                borderTopWidth: 1,
-                borderTopColor: BLACK,
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-              }}
-            >
-              <Pressable
-                // onPress={() => navigation.navigate('VisitScreen', { id: v.id })}
-                onPress={() => navigation.navigate('CallScreen', { id: v.id })}
-                style={[
-                  GlobalStyle.filedButton,
-                  {
-                    backgroundColor: '#00953C',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    flexBasis: '48%',
-                  },
-                ]}
-              >
-                {/* <Icon name="plus" color={WHITE} size={20} /> */}
-                <Text style={GlobalStyle.filedButtonText}>Consult Patient</Text>
-              </Pressable>
-              <Pressable
-                style={[
-                  GlobalStyle.filedButton,
-                  {
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    flexBasis: '48%',
-                  },
-                ]}
-              >
-                <Icon name="x" color={WHITE} size={20} />
-                <Text style={GlobalStyle.filedButtonText}>End Visit</Text>
-              </Pressable>
-            </View>
-          </View>
-        ))}
+          {loading ? <ActivityIndicator size={'small'} color={RED_COLOR}/> :         <Appointments data={appoints} navigation={navigation} />}
       </View>
     </SafeAreaView>
   );

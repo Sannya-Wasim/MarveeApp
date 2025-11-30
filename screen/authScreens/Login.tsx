@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { View, Text, Image, Dimensions, Pressable, TextInput } from 'react-native';
+import { View, Text, Image, Dimensions, Pressable, TextInput, ToastAndroid } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScaledSheet, scale, } from 'react-native-size-matters';
 import { BLACK, BLUE, RED_COLOR, WHITE } from '../../util/color';
@@ -9,14 +9,107 @@ import GlobalStyle from '../../util/styles';
 import { NativeStackNavigationProp,NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackType } from '../../navigations/authNavigation';
 import { useAppDispatch } from '../../store/hook';
-import { setAuthSkiped, setLogin } from '../../store/reducer/authReducer';
+import { setAuthSkiped, setDetails, setLogin, setSigin } from '../../store/reducer/authReducer';
+import axios from 'axios';
+import { config } from '../../config';
 type Props = NativeStackScreenProps<AuthStackType, 'Login'>;
 
 
 const LoginScreen = ({navigation}:Props) => {
-    const phone = useInputState("")
+    const emailOrNumber = useInputState('');
     const password = usePasswordInputState("")
     const dispatch = useAppDispatch()
+    const [loading, setLoading] = useState(false)
+
+    const validateEmailOrPhone = (input: string) => {
+    if (!input) {
+      ToastAndroid.show(
+        'Please enter email or phone number',
+        ToastAndroid.BOTTOM,
+      );
+      return null;
+    }
+
+    const isNumber = /^[0-9]+$/.test(
+      input.replace(/^\+92/, '').replace(/^0/, ''),
+    );
+
+    if (isNumber) {
+      // Normalize Pakistani phone number
+      let normalizedNumber = input;
+      if (input.startsWith('+92')) normalizedNumber = input.slice(3);
+      if (input.startsWith('0')) normalizedNumber = input.slice(1);
+
+      // Validate number format: should start with 3 and be 10 digits (03XXYYYYYYY)
+      if (!/^3\d{9}$/.test(normalizedNumber)) {
+        ToastAndroid.show('Invalid Pakistani phone number', ToastAndroid.SHORT);
+        return null;
+      }
+
+      return { type: 'phone', value: normalizedNumber };
+    } else {
+      // Validate email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(input)) {
+        ToastAndroid.show('Invalid email format', ToastAndroid.SHORT);
+        return null;
+      }
+
+      return { type: 'email', value: input };
+    }
+  };
+
+    const login = async () => {
+    setLoading(true);
+    try {
+      const validated = validateEmailOrPhone(emailOrNumber?.value?.trim());
+      if (!validated)
+        return ToastAndroid?.show(
+          'Incorrect number or email',
+          ToastAndroid?.BOTTOM,
+        );
+      console.log('email or phone', validated);
+      const formData = new FormData();
+      if (validated?.type === 'email') {
+        formData.append('email', validated?.value);
+      } else {
+        formData.append('number', validated?.value);
+      }
+      formData?.append('password', password?.value);
+      const res = await axios.post(`${config.BASE_URL}/login/login`, formData, {
+        headers : {
+            'Content-Type' : 'multipart/form-data'
+        }
+      })
+      console.log("response", res)
+      if (res?.data.status) {
+        console.log('Logged in successfully', res?.data.data);
+        console.log('res?.data?.data', res?.data?.data);
+        const formattedUser = {
+          token: res.data.token,
+          id: res.data.data.userId,
+          role: res.data.data.role,
+          name: res.data.data.fullName,
+          email: res.data.data.email,
+          designation: res.data.data.designation,
+          number: res.data.data.number,
+        };
+
+        dispatch(setDetails(formattedUser));
+        dispatch(setSigin(true));
+      } else {
+        console.log('Login failed', res?.data.message);
+        ToastAndroid?.show(
+          `Login failed: ${res?.data.message}`,
+          ToastAndroid?.TOP,
+        );
+      }
+    } catch (error) {
+      console.log('Error loggging in', error);
+    } finally {
+      setLoading(false);
+    }
+  };
     return (
         <SafeAreaView style={styles.mainContainer}>
             <View style={styles.skipButtonContainer}>
@@ -28,12 +121,12 @@ const LoginScreen = ({navigation}:Props) => {
 
                 <Text style={styles.mainText}>Login</Text>
                 <Text style={styles.text}>Hi, Welcome Back, please log in to continue.</Text>
-                <Input inputState={phone} inputMode='numeric' maxLength={11} label={"Phone No."} placeholder='Enter Phone Number' />
+                <Input inputState={emailOrNumber} label={"Phone No."} placeholder='Enter Phone Number' />
                 <PasswordInput inputState={password} label={"Password"} placeholder='Enter Password Here' />
                 <View style={styles.forgotContainer}>
                     <Pressable style={styles.forgotButton}><Text style={styles.forgotButtonText}>Forgot Password?</Text></Pressable>
                 </View>
-                <Pressable style={GlobalStyle.filedButton} onPress={()=>dispatch(setLogin(true))}>
+                <Pressable style={GlobalStyle.filedButton} onPress={login}>
                     <Text style={GlobalStyle.filedButtonText}>Log In</Text>
                 </Pressable>
             </View>

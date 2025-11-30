@@ -6,14 +6,32 @@ import type { RootState } from '../index'
 interface AuthState {
   sliderShown: boolean,
   isSingin: boolean,
-  authSkiped: boolean
+  authSkiped: boolean,
+  user: {
+    token: string;
+    id: string;
+    role: string;
+    name: string;
+    email: string;
+    designation: string;
+    number: string;
+}
 }
 
 // Define the initial state using that type
 const initialState: AuthState = {
   sliderShown: false,
   isSingin: false,
-  authSkiped: false
+  authSkiped: false,
+  user : {
+    token : "",
+    id : "",
+    role : "",
+    name : '',
+    email : "",
+    designation : '',
+    number : ''
+  }
 }
 
 export const authSlice = createSlice({
@@ -32,10 +50,17 @@ export const authSlice = createSlice({
       console.log(action,"action")
       state.isSingin = action.payload
     },
+    setSigin: (state, action: PayloadAction<boolean>) => {
+      console.log(action,"action")
+      state.isSingin = action.payload
+    },
+    setDetails : (state, action) => {
+      state.user = action.payload
+    }
   },
 })
 
-export const { setSliderShown,setAuthSkiped ,setLogin} = authSlice.actions
+export const { setSliderShown,setAuthSkiped ,setLogin, setSigin, setDetails} = authSlice.actions
 
 
 export default authSlice.reducer
