@@ -1,27 +1,51 @@
 import { useState, useRef } from 'react';
-import { View, Text, Image, Dimensions, Pressable, TextInput, ToastAndroid } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  Dimensions,
+  Pressable,
+  TextInput,
+  ToastAndroid,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScaledSheet, scale, } from 'react-native-size-matters';
+import { ScaledSheet, scale } from 'react-native-size-matters';
 import { BLACK, BLUE, RED_COLOR, WHITE } from '../../util/color';
 import { useInputState, Input } from '../../components/inputs/textInput';
-import { usePasswordInputState, PasswordInput } from '../../components/inputs/passwordInput';
+import {
+  usePasswordInputState,
+  PasswordInput,
+} from '../../components/inputs/passwordInput';
 import GlobalStyle from '../../util/styles';
-import { NativeStackNavigationProp,NativeStackScreenProps } from '@react-navigation/native-stack';
+import {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import { AuthStackType } from '../../navigations/authNavigation';
 import { useAppDispatch } from '../../store/hook';
-import { setAuthSkiped, setDetails, setLogin, setSigin } from '../../store/reducer/authReducer';
+import {
+  setAuthSkiped,
+  setDetails,
+  setLogin,
+  setSigin,
+} from '../../store/reducer/authReducer';
 import axios from 'axios';
 import { config } from '../../config';
+import { useApi } from '../../methods/apiClient';
+import { endpoints } from '../../methods/endpoints';
 type Props = NativeStackScreenProps<AuthStackType, 'Login'>;
 
+const LoginScreen = ({ navigation }: Props) => {
+  const emailOrNumber = useInputState('');
+  const password = usePasswordInputState('');
+  const dispatch = useAppDispatch();
+  const [loading, setLoading] = useState(false);
+  const { AUTH } = useApi();
 
-const LoginScreen = ({navigation}:Props) => {
-    const emailOrNumber = useInputState('');
-    const password = usePasswordInputState("")
-    const dispatch = useAppDispatch()
-    const [loading, setLoading] = useState(false)
-
-    const validateEmailOrPhone = (input: string) => {
+  const validateEmailOrPhone = (input: string) => {
     if (!input) {
       ToastAndroid.show(
         'Please enter email or phone number',
@@ -59,7 +83,7 @@ const LoginScreen = ({navigation}:Props) => {
     }
   };
 
-    const login = async () => {
+  const login = async () => {
     setLoading(true);
     try {
       const validated = validateEmailOrPhone(emailOrNumber?.value?.trim());
@@ -76,25 +100,20 @@ const LoginScreen = ({navigation}:Props) => {
         formData.append('number', validated?.value);
       }
       formData?.append('password', password?.value);
-      const res = await axios.post(`${config.BASE_URL}/login/login`, formData, {
-        headers : {
-            'Content-Type' : 'multipart/form-data'
-        }
-      })
-      console.log("response", res)
-      if (res?.data.status) {
-        console.log('Logged in successfully', res?.data.data);
+      const res = await AUTH(endpoints?.login, formData);
+      console.log('response', res);
+      if (res?.status) {
+        console.log('Logged in successfully', res?.data);
         console.log('res?.data?.data', res?.data?.data);
         const formattedUser = {
-          token: res.data.token,
-          id: res.data.data.userId,
-          role: res.data.data.role,
-          name: res.data.data.fullName,
-          email: res.data.data.email,
-          designation: res.data.data.designation,
-          number: res.data.data.number,
+          token: res.token,
+          id: res.data.userId,
+          role: res.data.role,
+          name: res.data.fullName,
+          email: res.data.email,
+          designation: res.data.designation,
+          number: res.data.number,
         };
-
         dispatch(setDetails(formattedUser));
         dispatch(setSigin(true));
       } else {
@@ -110,103 +129,130 @@ const LoginScreen = ({navigation}:Props) => {
       setLoading(false);
     }
   };
-    return (
-        <SafeAreaView style={styles.mainContainer}>
-            <View style={styles.skipButtonContainer}>
-                <Pressable style={styles.skipButton} ><Text style={styles.skipButtonText}></Text></Pressable>
-            </View>
-            <View style={styles.container}>
+  return (
+    <SafeAreaView style={styles.mainContainer}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'height' : 'padding'}
+      >
+        <View style={styles.skipButtonContainer}>
+          <Pressable style={styles.skipButton}>
+            <Text style={styles.skipButtonText}></Text>
+          </Pressable>
+        </View>
+        <View style={styles.container}>
+          <Image
+            source={require('../../assets/png/logoBlack.png')}
+            style={styles.logo}
+            resizeMode="stretch"
+          />
 
-                <Image source={require('../../assets/png/logoBlack.png')} style={styles.logo} resizeMode='stretch' />
-
-                <Text style={styles.mainText}>Login</Text>
-                <Text style={styles.text}>Hi, Welcome Back, please log in to continue.</Text>
-                <Input inputState={emailOrNumber} label={"Phone No."} placeholder='Enter Phone Number' />
-                <PasswordInput inputState={password} label={"Password"} placeholder='Enter Password Here' />
-                <View style={styles.forgotContainer}>
-                    <Pressable style={styles.forgotButton}><Text style={styles.forgotButtonText}>Forgot Password?</Text></Pressable>
-                </View>
-                <Pressable style={GlobalStyle.filedButton} onPress={login}>
-                    <Text style={GlobalStyle.filedButtonText}>Log In</Text>
-                </Pressable>
-            </View>
-
-        </SafeAreaView>
-    );
+          <Text style={styles.mainText}>Login</Text>
+          <Text style={styles.text}>
+            Hi, Welcome Back, please log in to continue.
+          </Text>
+          <Input
+            inputState={emailOrNumber}
+            label="Email Address/Phone No."
+            placeholder="Enter email or phone"
+            inputStyle={{ color: 'black' }}
+          />
+          <PasswordInput
+            inputState={password}
+            label={'Password'}
+            placeholder="Enter Password Here"
+          />
+          <View style={styles.forgotContainer}>
+            <Pressable style={styles.forgotButton}>
+              <Text style={styles.forgotButtonText}>Forgot Password?</Text>
+            </Pressable>
+          </View>
+           <Pressable style={GlobalStyle.filedButton} onPress={login}>
+            {loading ? (
+              <ActivityIndicator size={'small'} color={WHITE} />
+            ) : (
+              <Text style={GlobalStyle.filedButtonText}>Log In</Text>
+            )}
+          </Pressable>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
 };
 
 export default LoginScreen;
 
 const styles = ScaledSheet.create({
-    mainContainer: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    container: {
-        width: "90%",
-        backgroundColor: WHITE,
-        alignContent: "center",
-        alignItems: "center",
-        alignSelf: "center"
-    }, skipButtonContainer: {
-        flexDirection: "row",
-        justifyContent: "flex-end",
-        marginVertical: '20@s',
-        marginHorizontal: '7@s'
-    },
-    skipButton: {
-        backgroundColor: WHITE,
-        paddingVertical: "15@s",
-        paddingHorizontal: '30@s'
-    },
-    skipButtonText: {
-        color: RED_COLOR
-    },
-    logo: {
-        width: "195@s",
-        height: "100@s",
-        marginBottom: "40@s"
-    },
-    mainText: {
-        fontSize: "24@s",
-        fontWeight: 'bold',
-        color: "black",
-        marginVertical: '10@s'
-    },
-    text: {
-        fontSize: "12@s",
-        fontWeight: '300',
-        color: "black",
-        marginVertical: '5@s',
-        textAlign:"center"
-    },
-    forgotContainer: {
-        flexDirection: "row",
-        width: "100%",
-        alignSelf: "center",
-        justifyContent: "flex-end",
-    },
-    forgotButton: {
-        backgroundColor: WHITE,
-        paddingVertical: "5@s",
-        paddingHorizontal: '10@s'
-    },
-    forgotButtonText: {
-        color: BLUE
-    },
-    signupContainer: {
-        flexDirection: "row",
-        width: "100%",
-        alignSelf: "center",
-        marginVertical: '10@s',
-        justifyContent: 'center',
-    },
-    signupButton: {
-        backgroundColor: WHITE,
-        paddingVertical: "5@s",
-        paddingHorizontal: '10@s'
-    },
-    signupButtonText: {
-        color: BLUE
-    },
+  mainContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+    justifyContent : 'center'
+  },
+  container: {
+    width: '90%',
+    backgroundColor: WHITE,
+    alignContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+  },
+  skipButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginVertical: '20@s',
+    marginHorizontal: '7@s',
+  },
+  skipButton: {
+    backgroundColor: WHITE,
+    paddingVertical: '15@s',
+    paddingHorizontal: '30@s',
+  },
+  skipButtonText: {
+    color: RED_COLOR,
+  },
+  logo: {
+    width: '195@s',
+    height: '100@s',
+    marginBottom: '40@s',
+  },
+  mainText: {
+    fontSize: '24@s',
+    fontWeight: 'bold',
+    color: 'black',
+    marginVertical: '10@s',
+  },
+  text: {
+    fontSize: '12@s',
+    fontWeight: '300',
+    color: 'black',
+    marginVertical: '5@s',
+    textAlign: 'center',
+  },
+  forgotContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    alignSelf: 'center',
+    justifyContent: 'flex-end',
+  },
+  forgotButton: {
+    backgroundColor: WHITE,
+    paddingVertical: '5@s',
+    paddingHorizontal: '10@s',
+  },
+  forgotButtonText: {
+    color: BLUE,
+  },
+  signupContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    alignSelf: 'center',
+    marginVertical: '10@s',
+    justifyContent: 'center',
+  },
+  signupButton: {
+    backgroundColor: WHITE,
+    paddingVertical: '5@s',
+    paddingHorizontal: '10@s',
+  },
+  signupButtonText: {
+    color: BLUE,
+  },
 });
